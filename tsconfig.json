@@ -2,44 +2,44 @@
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
-    // "rootDir": "./src",
-    // "outDir": "./dist",
-
+    // We assume your CLI source code is in 'index.ts' or a 'src' folder
+    // "rootDir": "./src", 
+    "outDir": "./dist",
     // Environment Settings
-    // See also https://aka.ms/tsconfig/module
     "module": "nodenext",
     "target": "esnext",
-    "types": [],
-    // For nodejs:
-    // "lib": ["esnext"],
-    // "types": ["node"],
-    // and npm install -D @types/node
-
+    "lib": [
+      "esnext"
+    ], // Essential: Include Node.js environment libraries
+    "types": [
+      "node"
+    ], // Essential: Include Node.js types (assuming you installed @types/node)
     // Other Outputs
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-
     // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-
-    // Style Options
-    // "noImplicitReturns": true,
-    // "noImplicitOverride": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    // "noFallthroughCasesInSwitch": true,
-    // "noPropertyAccessFromIndexSignature": true,
-
     // Recommended Options
     "strict": true,
-    "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
-    "skipLibCheck": true,
-    "moduleResolution": "nodenext"
-  }
+    "isolatedModules": true, // This is often problematic for CLIs; consider removing if issues persist
+    "noEmit": false, // CRITICAL: Must be false to output JS files to 'dist'
+    // These settings related to JSX and front-end bundling are NOT needed for a pure Node.js CLI:
+    // "jsx": "react-jsx",
+    // "noUncheckedSideEffectImports": true,
+    // "allowImportingTsExtensions": true,
+  },
+  // 🔑 CRITICAL FIX: Tell the compiler what to check.
+  "include": [
+    "index.ts", // Your CLI entry point
+    "src/**/*.ts" // All your CLI source files (e.g., generator.ts, types.ts)
+  ],
+  // 🔑 CRITICAL FIX: Tell the compiler what to ignore.
+  "exclude": [
+    "node_modules",
+    "dist",
+    "templates" // Ignore ALL files inside the templates folder
+  ]
 }

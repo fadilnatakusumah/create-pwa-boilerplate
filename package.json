@@ -9,7 +9,9 @@
     "create-pwa-boilerplate": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build:ts": "tsc",
+    "copy:assets": "copyfiles -u 1 \"templates/**/*\" dist/src/templates",
+    "build": "pnpm build:ts && pnpm copy:assets",
     "start": "ts-node index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -20,6 +22,7 @@
   "description": "",
   "devDependencies": {
     "@types/node": "^24.9.2",
+    "copyfiles": "^2.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
