@@ -1,0 +1,107 @@
+/* src/components/PwaFeaturesGrid.module.css */
+
+/* Block: grid */
+.grid {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Element: header */
+.header {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+/* Element: cameraContainer */
+.cameraContainer {
+  margin-bottom: 2rem;
+  border: 4px solid #6366f1;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Element: video */
+.video {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+}
+
+/* Element: cardList */
+.cardList {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .cardList {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Element: featureCard */
+.featureCard {
+  padding: 1.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s ease-in-out, background-color 0.3s ease-in-out;
+  background-color: #d1fae5;
+}
+
+/* State: Hover effect */
+.featureCard:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+/* Modifier: unsupported */
+.unsupported {
+  /* This is a local class name used specifically as a modifier */
+  background-color: #f3f4f6;
+  opacity: 0.6;
+  pointer-events: none;
+  cursor: default;
+}
+
+/* The rest of the elements (featureIcon, featureName, etc.) would follow the same pattern... */
+/* Example: */
+.featureName {
+  color: #4a5565;
+  font-weight: 600;
+}
+
+.featureMessage {
+  color: #6a7282;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.featureIcon {
+  font-size: 2.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.featureStatusText {
+  color: #ef4444;
+}
+
+.logContainer {
+  /* ... styles ... */
+  background-color: #1f2937;
+  color: #ffffff;
+  padding: 1rem;
+  height: 12rem;
+  overflow-y: scroll;
+}

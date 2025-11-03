@@ -41,5 +41,5 @@
     "node_modules",
     "dist",
     "templates" // Ignore ALL files inside the templates folder
-  ]
+  ],
 }

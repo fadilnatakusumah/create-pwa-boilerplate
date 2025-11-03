@@ -2,8 +2,6 @@
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
 
-import styles from "./PwaFeaturesGrid.module.css";
-
 // --- Type Definitions for Safety ---
 interface FeatureStatus {
   name: string;
@@ -278,43 +276,49 @@ const PwaFeaturesGrid: React.FC = () => {
   ].map((f) => ({ ...f, status: f.isSupported ? f.status : "Not Supported" }));
 
   return (
-    <div className={styles.grid}>
-      <h1 className={styles.header}>PWA Capabilities Dashboard</h1>
+    <div className="p-8">
+      <h1 className="text-2xl font-bold mb-6 flex items-center justify-center">
+        PWA Capabilities Dashboard
+      </h1>
       {/* Live Camera Stream */}
       {cameraActive && (
-        <div className={styles.cameraContainer}>
+        <div className="mb-8 border-4 border-indigo-500 rounded-lg overflow-hidden">
           <video
             ref={videoRef}
             autoPlay
             playsInline
             muted
-            className={styles.video}
+            className="w-full h-auto aspect-video object-cover"
           />
         </div>
       )}
 
-      <div className={styles.cardList}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {features.map((feature, index) => (
           <div
             key={index}
             onClick={feature.isSupported ? feature.action : undefined}
-            // 🔑 Applying the base class and the modifier class
-            className={`${styles.featureCard} ${
-              !feature.isSupported ? styles.unsupported : ""
-            }`}
+            className={`
+                        p-6 border rounded-lg cursor-pointer transition-shadow shadow-md hover:shadow-lg 
+                        ${
+                          feature.isSupported
+                            ? "bg-green-200"
+                            : "bg-gray-100 opacity-60 pointer-events-none"
+                        }
+                    `}
           >
-            <div className={styles.featureIcon}>{feature.icon}</div>
-            <div className={styles.featureName}>{feature.name}</div>
-            <small className={styles.featureStatusText}>
+            <div className="text-4xl mb-3">{feature.icon}</div>
+            <div className="font-semibold text-gray-600">{feature.name}</div>
+            <small className="text-red-500">
               {!feature.isSupported && "(Not Supported on this device)"}
             </small>
-            <p className={styles.featureMessage}>{feature.message}</p>{" "}
+            <p className="text-sm text-gray-500">{feature.message}</p>
           </div>
         ))}
       </div>
 
-      <h2 className={styles.logHeader}>Event Log</h2>
-      <div className={styles.logContainer}>
+      <h2 className="text-xl font-semibold mt-10 mb-4">Event Log</h2>
+      <div className="bg-gray-800 text-white p-4 h-48 overflow-y-scroll text-sm rounded-lg font-mono">
         {log.length > 0
           ? log.map((msg, i) => (
               <div key={i}>

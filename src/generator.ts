@@ -1,45 +1,37 @@
-// // src/generator.ts
-// import { type PWAConfig } from "./types.js";
-// import * as fs from "fs-extra";
-
-// export function generateProject(config: PWAConfig): void {
-//   const templatePath = `./templates/${config.framework}-ts-base`;
-//   const destinationPath = config.projectName;
-
-//   // 1. Copy the base template
-//   fs.copySync(templatePath, destinationPath);
-
-//   // 2. Templating (Type-safe injection)
-//   const manifestPath = `${destinationPath}/public/manifest.json.ejs`;
-//   let manifestContent = fs.readFileSync(manifestPath, "utf-8");
-
-//   // Replace placeholders using the typed config object
-//   manifestContent = manifestContent.replace("<%= pwa.name %>", config.pwa.name);
-//   manifestContent = manifestContent.replace(
-//     "<%= pwa.themeColor %>",
-//     config.pwa.themeColor
-//   );
-//   // ...
-
-//   fs.writeFileSync(`${destinationPath}/public/manifest.json`, manifestContent);
-//   fs.removeSync(manifestPath); // Remove the template file
-
-//   // 3. Handle Tailwind (Conditional Logic)
-//   if (config.useTailwind) {
-//     // Logic to update package.json, copy config files, and inject imports
-//   }
-
-//   // 4. Install Dependencies
-//   // runCommand('npm install', destinationPath);
-// }
-
 // src/generator.ts
 
-import { type PWAConfig } from "./types.js";
+import chalk from "chalk";
 import fs from "fs-extra";
 import path from "path";
-import chalk from "chalk";
 import { fileURLToPath } from "url";
+import { type PWAConfig } from "./types.js";
+
+// 🔑 NEW: Define __dirname equivalent for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+enum Frontend {
+  React = "react",
+  Vue = "vue",
+  Svelte = "svelte",
+}
+
+const templatePlaceholders: Record<Frontend, { [key: string]: string }> = {
+  [Frontend.React]: {
+    "// tailwindCSSImportsPlaceholder": `@import "tailwindcss";`,
+    "// tailwindCSSPackagePlaceholder": `"@tailwindcss/vite": "^4.1.16",\n    "tailwindcss": "^4.1.16,`,
+    "// tailwindCSSViteConfig": `import tailwindcss from '@tailwindcss/vite'`,
+    "// tailwindCSSFunctionViteConfig": `tailwindcss(),`,
+  },
+  [Frontend.Vue]: {
+    "// vuePlaceholder": "",
+    // Add other properties for Vue here
+  },
+  [Frontend.Svelte]: {
+    "// sveltePlaceholder": "",
+    // Add other properties for Svelte here
+  },
+};
 
 /**
  * Runs a shell command and logs output (simplified for this draft)
@@ -53,7 +45,7 @@ const runCommand = (command: string, cwd: string) => {
  * Finds and replaces EJS-style placeholders in a content string.
  */
 const processTemplate = (content: string, config: PWAConfig): string => {
-  // PWA Metadata
+  // 1. Handle PWA Metadata Replacements (as before)
   let result = content.replace(/<%= pwa\.name %>/g, config.pwa.name);
   result = result.replace(/<%= pwa\.shortName %>/g, config.pwa.shortName);
   result = result.replace(/<%= pwa\.themeColor %>/g, config.pwa.themeColor);
@@ -63,18 +55,31 @@ const processTemplate = (content: string, config: PWAConfig): string => {
   );
   result = result.replace(/<%= pwa\.displayMode %>/g, config.pwa.displayMode);
 
-  // Project/Styling flags
-  const tailwindClass = config.useTailwind ? "true" : "false";
-  result = result.replace(/<%= useTailwind %>/g, tailwindClass);
+  // 2. Handle TailwindCSS configuration
+  if (config.useTailwind) {
+    const placeholdersTemplates = templatePlaceholders[config.framework];
+    for (const placeholder in placeholdersTemplates) {
+      result = result.replace(
+        placeholder,
+        placeholdersTemplates[placeholder] as string
+      );
+    }
+  } else {
+    const placeholdersTemplates = templatePlaceholders[config.framework];
+    for (const placeholder in placeholdersTemplates) {
+      result = result.replace(placeholder, "");
+    }
+  }
+
+  // 3. Handle other placeholders
+
+  // a) Handle the more complex conditional blocks (like the whole line in vite.config.ts)
+  // We will use a unique block placeholder (e.g., '') in the template
 
   return result;
 };
 
 export function generateProject(config: PWAConfig): void {
-  // 🔑 NEW: Define __dirname equivalent for ES Modules
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-
   const templateBase = `${config.framework}`;
   const templatePath = path.join(__dirname, "templates", templateBase);
   const destinationPath = path.join(process.cwd(), config.projectName);
@@ -88,8 +93,8 @@ export function generateProject(config: PWAConfig): void {
     "package.json.ejs",
     "index.html.ejs",
     "public/manifest.json.ejs",
-    "src/components/PwaFeaturesGrid.tsx",
     "src/index.css.ejs",
+    "vite.config.ts.ejs",
   ];
 
   filesToProcess.forEach((filePathEjs) => {
@@ -104,30 +109,39 @@ export function generateProject(config: PWAConfig): void {
       fs.removeSync(fullPathEjs); // Remove the EJS file
     }
   });
-  console.log(chalk.green("Injected PWA and project variables."));
 
-  // 3. Conditional: Tailwind CSS Setup
-  if (config.useTailwind) {
-    // A. Copy Tailwind config files
-    const tailwindPath = path.join(
-      process.cwd(),
-      "templates",
-      "addons",
-      "tailwind"
+  // 3. Remove unnecessary files if not using Tailwind
+  console.log("🚀 ~ generateProject ~ config.useTailwind:", config.useTailwind);
+  if (!config.useTailwind) {
+    const filesToRemove = fs
+      .readdirSync(path.join(destinationPath, "src/components"))
+      .filter((fileName) => fileName.endsWith(".tailwindcss.tsx"));
+    filesToRemove.forEach((fileName) =>
+      fs.removeSync(path.join(destinationPath, "src/components", fileName))
     );
-    fs.copySync(tailwindPath, destinationPath, { overwrite: true });
-
-    // B. Add Tailwind dependencies to package.json (simplified)
-    // In a real scenario, you'd parse/edit the package.json object
-    runCommand(
-      "npm install -D tailwindcss postcss autoprefixer",
-      destinationPath
+  } else {
+    // rename the tailwind files and remove others
+    const filesToRemove = fs
+      .readdirSync(path.join(destinationPath, "src/components"))
+      .filter((fileName) => !fileName.endsWith(".tailwindcss.tsx"));
+    filesToRemove.forEach((fileName) =>
+      fs.removeSync(path.join(destinationPath, "src/components", fileName))
     );
-    console.log(chalk.yellow("Tailwind CSS configuration added."));
+    fs.readdirSync(path.join(destinationPath, "src/components")).forEach(
+      (fileName) => {
+        const newFileName = fileName.replace(".tailwindcss", "");
+        fs.renameSync(
+          path.join(destinationPath, "src/components", fileName),
+          path.join(destinationPath, "src/components", newFileName)
+        );
+      }
+    );
   }
 
+  console.log(chalk.green("Injected PWA and project variables."));
+
   // 4. Final step: Run initial install (simulated)
-  runCommand("npm install", destinationPath);
+  runCommand("pnpm install", destinationPath);
 }
 
 // NOTE: Don't forget to export this function from your module!

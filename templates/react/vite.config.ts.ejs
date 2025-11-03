@@ -1,0 +1,46 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'; // PWA plugin
+// tailwindCSSViteConfig
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [
+    // tailwindCSSFunctionViteConfig
+    react({
+      babel: {
+        plugins: [['babel-plugin-react-compiler']],
+      },
+    }),
+    
+    // 🔑 PWA Plugin Configuration
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'icons/*.png'],
+      manifest: {
+        name: '<%= pwa.name %>',
+        short_name: '<%= pwa.shortName %>',
+        theme_color: '<%= pwa.themeColor %>',
+        background_color: '<%= pwa.backgroundColor %>',
+        display: '<%= pwa.displayMode %>',
+        scope: '/',
+        start_url: '/',
+        icons: [
+          {
+            src: '<%= pwa.iconPath %>',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          // Add smaller icon sizes here as needed
+        ]
+      },
+      // You can disable generation of a workbox service worker file
+      // if you rely on the template's minimal service-worker.js
+      workbox: {
+        clientsClaim: true,
+        skipWaiting: true,
+      },
+    })
+  ],
+})
