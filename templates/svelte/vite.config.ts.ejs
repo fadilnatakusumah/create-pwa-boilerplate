@@ -1,0 +1,45 @@
+// templates/svelte/vite.config.ts.ejs
+
+import { defineConfig } from "vite";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import { VitePWA } from "vite-plugin-pwa";
+// tailwindCSSViteConfig
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [
+      // tailwindCSSFunctionViteConfig
+    svelte(),
+    // 🔑 PWA Plugin Configuration
+    VitePWA({
+      registerType: "autoUpdate",
+      strategies: "injectManifest", // We use injectManifest for custom push handlers
+      srcDir: "src",
+      filename: "sw.ts",
+
+      manifest: {
+        name: '<%= pwa.name %>',
+        short_name: '<%= pwa.shortName %>',
+        theme_color: '<%= pwa.themeColor %>',
+        background_color: '<%= pwa.backgroundColor %>',
+        display: '<%= pwa.displayMode %>',
+        scope: '/',
+        start_url: '/',
+        icons: [
+          {
+            src: '<%= pwa.iconPath %>',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          // Add smaller icon sizes here as needed
+        ]
+      },
+      workbox: {
+        // ... (Workbox config)
+        clientsClaim: true,
+        skipWaiting: true,
+      },
+    }),
+  ],
+});
