@@ -1,5 +1,6 @@
 {
   "name": "create-pwa-boilerplate",
+  "displayName": "create-pwa-boilerplate",
   "version": "1.0.0",
   "directories": {
     "doc": "docs"
@@ -15,10 +16,15 @@
     "start": "ts-node index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "files": [
+    "dist",
+    "templates",
+    "README.md"
+  ],
   "type": "module",
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Muhammad Fadhilah Mulyana <fadil.ntksmh@gmail.com>",
+  "license": "MIT",
   "description": "",
   "devDependencies": {
     "@types/node": "^24.9.2",
