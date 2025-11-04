@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // index.ts (or main CLI file)
 import inquirer from "inquirer";
 import {
