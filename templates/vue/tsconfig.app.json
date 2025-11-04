@@ -3,6 +3,7 @@
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "types": ["vite/client"],
+    "lib": ["es2020", "dom", "dom.iterable", "webworker"], // 🔑 Ensure 'webworker' is here
 
     /* Linting */
     "strict": true,

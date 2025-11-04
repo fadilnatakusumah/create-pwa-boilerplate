@@ -35,10 +35,12 @@ const PwaFeaturesGrid: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
-  const appendLog = useCallback(
-    (msg: string) => setLog((prev) => [...prev, msg]),
-    []
-  );
+  const appendLog = useCallback((msg: string, isError = false) => {
+    const status = isError ? "ERROR" : "INFO";
+    const timestamp = new Date().toLocaleTimeString();
+
+    setLog((prev) => [...prev, `[${timestamp}] [${status}] ${msg}`]);
+  }, []);
 
   // 1. Geolocation API Demo (PWA Feature: Location Access)
   const handleGeolocation = useCallback(() => {
@@ -196,11 +198,39 @@ const PwaFeaturesGrid: React.FC = () => {
       appendLog("Push Notifications: Successfully subscribed user.");
       // NOTE: In a real app, you would send this 'subscription' object to your server via fetch()
       console.log(subscription);
+      new Notification("PWA Notification Test", {
+        body: "Permission granted! This is a test notification.",
+        icon: "https://placehold.co/64x64/000000/FFFFFF?text=P",
+      });
     } catch (err) {
       appendLog(
         `Push Notifications: Subscription failed. Error: ${
           (err as Error).message
         }`
+      );
+    }
+  }, [appendLog]);
+
+  // 7. Clipboard API Demo
+  const handleClipboard = useCallback(async () => {
+    const textToCopy = `PWA Clipboard Test successful at ${new Date().toLocaleTimeString()}`;
+    appendLog(`Attempting to copy text: "${textToCopy}"`);
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      appendLog("Text copied to clipboard!");
+    } catch (error) {
+      // Fallback for non-secure contexts (like iframes)
+      const input = document.createElement("textarea");
+      input.value = textToCopy;
+      document.body.appendChild(input);
+      input.select();
+      // fallback for "writeText" method
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      appendLog(
+        `Text copy failed: ${
+          (error as Error).message
+        }Text copied using fallback (document.execCommand).`
       );
     }
   }, [appendLog]);
@@ -256,6 +286,14 @@ const PwaFeaturesGrid: React.FC = () => {
       action: handleWebShare,
       isSupported: !!navigator.share,
       message: "Share content with native system dialogue.",
+      status: "Ready" as const,
+    },
+    {
+      name: "Clipboard Write",
+      action: handleClipboard,
+      isSupported: "clipboard" in navigator && !!navigator.clipboard.writeText,
+      icon: "📋",
+      message: "Copies a simple text string to your device clipboard.",
       status: "Ready" as const,
     },
     {

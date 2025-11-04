@@ -33,10 +33,12 @@ const PwaFeaturesGrid: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
-  const appendLog = useCallback(
-    (msg: string) => setLog((prev) => [...prev, msg]),
-    []
-  );
+  const appendLog = useCallback((msg: string, isError = false) => {
+    const status = isError ? "ERROR" : "INFO";
+    const timestamp = new Date().toLocaleTimeString();
+
+    setLog((prev) => [...prev, `[${timestamp}] [${status}] ${msg}`]);
+  }, []);
 
   // 1. Geolocation API Demo (PWA Feature: Location Access)
   const handleGeolocation = useCallback(() => {
@@ -194,11 +196,39 @@ const PwaFeaturesGrid: React.FC = () => {
       appendLog("Push Notifications: Successfully subscribed user.");
       // NOTE: In a real app, you would send this 'subscription' object to your server via fetch()
       console.log(subscription);
+      new Notification("PWA Notification Test", {
+        body: "Permission granted! This is a test notification.",
+        icon: "https://placehold.co/64x64/000000/FFFFFF?text=P",
+      });
     } catch (err) {
       appendLog(
         `Push Notifications: Subscription failed. Error: ${
           (err as Error).message
         }`
+      );
+    }
+  }, [appendLog]);
+
+  // 7. Clipboard API Demo
+  const handleClipboard = useCallback(async () => {
+    const textToCopy = `PWA Clipboard Test successful at ${new Date().toLocaleTimeString()}`;
+    appendLog(`Attempting to copy text: "${textToCopy}"`);
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      appendLog("Text copied to clipboard!");
+    } catch (error) {
+      // Fallback for non-secure contexts (like iframes)
+      const input = document.createElement("textarea");
+      input.value = textToCopy;
+      document.body.appendChild(input);
+      input.select();
+      // fallback for "writeText" method
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      appendLog(
+        `Text copy failed: ${
+          (error as Error).message
+        }Text copied using fallback (document.execCommand).`
       );
     }
   }, [appendLog]);
@@ -257,6 +287,14 @@ const PwaFeaturesGrid: React.FC = () => {
       status: "Ready" as const,
     },
     {
+      name: "Clipboard Write",
+      action: handleClipboard,
+      isSupported: "clipboard" in navigator && !!navigator.clipboard.writeText,
+      icon: "📋",
+      message: "Copies a simple text string to your device clipboard.",
+      status: "Ready" as const,
+    },
+    {
       name: "Battery Status",
       icon: "🔋",
       action: handleBatteryStatus,
@@ -299,16 +337,18 @@ const PwaFeaturesGrid: React.FC = () => {
             key={index}
             onClick={feature.isSupported ? feature.action : undefined}
             className={`
-                        p-6 border rounded-lg cursor-pointer transition-shadow shadow-md hover:shadow-lg 
+                        p-6 border rounded-lg cursor-pointer transition-shadow shadow-md hover:shadow-lg ring-2 ring-teal-600
                         ${
                           feature.isSupported
-                            ? "bg-green-200"
+                            ? "bg-green-200 hover:bg-green-300 ring-2 ring-indigo-200"
                             : "bg-gray-100 opacity-60 pointer-events-none"
                         }
                     `}
           >
             <div className="text-4xl mb-3">{feature.icon}</div>
-            <div className="font-semibold text-gray-600">{feature.name}</div>
+            <div className="font-semibold text-xl text-teal-800">
+              {feature.name}
+            </div>
             <small className="text-red-500">
               {!feature.isSupported && "(Not Supported on this device)"}
             </small>
@@ -318,7 +358,7 @@ const PwaFeaturesGrid: React.FC = () => {
       </div>
 
       <h2 className="text-xl font-semibold mt-10 mb-4">Event Log</h2>
-      <div className="bg-gray-800 text-white p-4 h-48 overflow-y-scroll text-sm rounded-lg font-mono">
+      <div className="bg-gray-900 text-white p-4 h-40 overflow-y-scroll text-sm rounded-lg font-mono">
         {log.length > 0
           ? log.map((msg, i) => (
               <div key={i}>

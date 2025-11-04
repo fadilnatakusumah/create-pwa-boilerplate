@@ -74,6 +74,7 @@
     }
   };
 
+  // 2. Camera API Demo (PWA Feature: Media Capture)
   const handleCamera = async () => {
     if (cameraActive) {
       // Cleanup existing stream
@@ -102,25 +103,45 @@
     }
   };
 
-  const handleClipboard = async () => {
-    const textToCopy = `PWA Clipboard Test successful at ${new Date().toLocaleTimeString()}`;
-    appendLog(`Attempting to copy text: "${textToCopy}"`);
+  // 3. Vibration API Demo (PWA Feature: Haptic Feedback)
+  const handleVibrate = async () => {
+    if (!("vibrate" in navigator)) {
+      return appendLog("Vibration: Not Supported.");
+    }
+    navigator.vibrate([200, 100, 200]); // Vibrate pattern
+    appendLog("Vibration: Success! Check your mobile device.");
+  };
+
+  // 4. Web Share API Demo
+  const handleWebShare = async () => {
+    if (!navigator.share) {
+      return appendLog("Web Share: Not Supported.");
+    }
+
     try {
-      await navigator.clipboard.writeText(textToCopy);
-      appendLog("Text copied to clipboard!");
-    } catch (error) {
-      // Fallback for non-secure contexts (like iframes)
-      const input = document.createElement("textarea");
-      input.value = textToCopy;
-      document.body.appendChild(input);
-      input.select();
-      // fallback for "writeText" method
-      document.execCommand("copy");
-      document.body.removeChild(input);
-      appendLog("Text copied using fallback (document.execCommand).", true);
+      await navigator.share({
+        title: "PWA Share Demo",
+        text: "Check out this awesome PWA Boilerplate!",
+        url: window.location.href,
+      });
+      appendLog("Web Share: Successfully shared content.");
+    } catch (err) {
+      // User canceled the share operation
+      appendLog(
+        `Web Share: Failed or user cancelled. Error: ${(err as Error).message}`
+      );
     }
   };
 
+  // 5. Battery Status API Demo
+  const updateBatteryStatus = () => {
+    if (battery) {
+      batteryLevel = Math.round(battery.level * 100);
+      appendLog(`Battery Status Updated: ${batteryLevel}%`);
+    }
+  };
+
+  // 6. Push Notification Implementation
   const handlePushSubscription = async () => {
     if (!("Notification" in window) || !("PushManager" in window)) {
       return appendLog("Push Notifications: Not Supported.");
@@ -139,9 +160,7 @@
 
       // 3. Subscribe the user (using placeholder public key for demo)
       // In a real app, this VAPID public key comes from your backend server.
-      // const VAPID_PUBLIC_KEY = "YOUR_VAPID_PUBLIC_KEY_HERE"; // Must be replaced
-      const VAPID_PUBLIC_KEY =
-        "BAFrs8mYnzzczIx22KVRS98Eaw4BM8lkyivs0vMrjSuWv5IpM5oOR8yl7l7W1rF0KS11vAHxzCU4Mdpl2DdnMuY"; // Must be replaced
+      const VAPID_PUBLIC_KEY = "YOUR_VAPID_PUBLIC_KEY_HERE"; // Must be replaced
       const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
 
       const subscription = await registration.pushManager.subscribe({
@@ -167,40 +186,23 @@
     }
   };
 
-  const handleVibrate = async () => {
-    if (!("vibrate" in navigator)) {
-      return appendLog("Vibration: Not Supported.");
-    }
-    navigator.vibrate([200, 100, 200]); // Vibrate pattern
-    appendLog("Vibration: Success! Check your mobile device.");
-  };
-
-  const handleWebShare = async () => {
-    if (!navigator.share) {
-      return appendLog("Web Share: Not Supported.");
-    }
-
+  // 7. Clipboard API Demo
+  const handleClipboard = async () => {
+    const textToCopy = `PWA Clipboard Test successful at ${new Date().toLocaleTimeString()}`;
+    appendLog(`Attempting to copy text: "${textToCopy}"`);
     try {
-      await navigator.share({
-        title: "PWA Share Demo",
-        text: "Check out this awesome PWA Boilerplate!",
-        url: window.location.href,
-      });
-      appendLog("Web Share: Successfully shared content.");
-    } catch (err) {
-      // User canceled the share operation
-      appendLog(
-        `Web Share: Failed or user cancelled. Error: ${(err as Error).message}`
-      );
-    }
-  };
-
-  // --- 4. Battery Status Logic ---
-
-  const updateBatteryStatus = () => {
-    if (battery) {
-      batteryLevel = Math.round(battery.level * 100);
-      appendLog(`Battery Status Updated: ${batteryLevel}%`);
+      await navigator.clipboard.writeText(textToCopy);
+      appendLog("Text copied to clipboard!");
+    } catch (error) {
+      // Fallback for non-secure contexts (like iframes)
+      const input = document.createElement("textarea");
+      input.value = textToCopy;
+      document.body.appendChild(input);
+      input.select();
+      // fallback for "writeText" method
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      appendLog("Text copied using fallback (document.execCommand).", true);
     }
   };
 
@@ -218,7 +220,9 @@
         updateBatteryStatus();
 
         // Add listeners
-        battery.addEventListener("levelchange", updateBatteryStatus);
+        if (battery) {
+          battery.addEventListener("levelchange", updateBatteryStatus);
+        }
       } catch (e) {
         appendLog("Could not access Battery Status API.", true);
         isBatterySupported = false;
@@ -268,7 +272,7 @@
       action: handleVibrate,
       isSupported: "vibrate" in navigator,
       status: "Ready" as const,
-      message: "Vibrate the device.",
+      message: "Vibrate the device (mobile only).",
     },
     {
       name: "Web Share",
@@ -351,7 +355,13 @@
             ? "bg-green-200 hover:bg-green-300 ring-2 ring-indigo-200"
             : "bg-gray-100 opacity-60 pointer-events-none"
         }`}
+        tabindex="0"
         on:click={feature.isSupported ? feature.action : undefined}
+        on:keydown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            feature.action();
+          }
+        }}
       >
         <div class="text-4xl mb-3">
           {feature.icon}

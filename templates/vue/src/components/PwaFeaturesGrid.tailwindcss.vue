@@ -22,8 +22,11 @@ const cameraActive = ref(false);
 const videoRef = ref<HTMLVideoElement | null>(null);
 const mediaStream = ref<MediaStream | null>(null); // To hold the active media stream
 
-const appendLog = (msg: string) => {
-  log.value = [...log.value.slice(-4), msg]; // Keep log short
+const appendLog = (msg: string, isError = false) => {
+  const status = isError ? "ERROR" : "INFO";
+  const timestamp = new Date().toLocaleTimeString();
+  // Simple array update triggers Svelte's reactivity
+  log.value = [...log.value, `[${timestamp}] [${status}] ${msg}`];
 };
 
 // --- Push Notification Setup (Constants and Utility) ---
@@ -48,7 +51,25 @@ const urlBase64ToUint8Array = (base64String: string) => {
 
 // --- Feature Implementation Logic ---
 
-// 1. Camera API Demo (Media Capture)
+// 1. Geolocation API Demo (PWA Feature: Location Access)
+const handleGeolocation = () => {
+  if (!("geolocation" in navigator)) {
+    return appendLog("Geolocation: Not Supported.");
+  }
+  appendLog("Geolocation: Requesting position...");
+  navigator.geolocation.getCurrentPosition(
+    (position: GeolocationPosition) => {
+      appendLog(
+        `Geolocation: Lat: ${position.coords.latitude}, Lon: ${position.coords.longitude}`
+      );
+    },
+    (error: GeolocationPositionError) => {
+      appendLog(`Geolocation error: ${error.message}`);
+    }
+  );
+};
+
+// 2. Camera API Demo (PWA Feature: Media Capture)
 const handleCamera = async () => {
   if (mediaStream.value) {
     mediaStream.value.getTracks().forEach((track) => track.stop());
@@ -108,7 +129,16 @@ onUnmounted(() => {
   }
 });
 
-// 2. Web Share API Demo
+// 3. Vibration API Demo (PWA Feature: Haptic Feedback)
+const handleVibrate = () => {
+  if (!("vibrate" in navigator)) {
+    return appendLog("Vibration: Not Supported.");
+  }
+  navigator.vibrate([200, 100, 200]);
+  appendLog("Vibration: Success! Check your mobile device.");
+};
+
+// 4. Web Share API Demo
 const handleWebShare = async () => {
   if (!navigator.share) {
     return appendLog("Web Share: Not Supported.");
@@ -128,7 +158,7 @@ const handleWebShare = async () => {
   }
 };
 
-// 3. Battery Status API Demo
+// 5. Battery Status API Demo
 const handleBatteryStatus = async () => {
   if (!navigator.getBattery) {
     return appendLog("Battery Status: Not Supported.");
@@ -146,34 +176,6 @@ const handleBatteryStatus = async () => {
     );
   }
 };
-
-// 4. Vibration API Demo
-const handleVibrate = () => {
-  if (!("vibrate" in navigator)) {
-    return appendLog("Vibration: Not Supported.");
-  }
-  navigator.vibrate([200, 100, 200]);
-  appendLog("Vibration: Success! Check your mobile device.");
-};
-
-// 5. Geolocation API Demo
-const handleGeolocation = () => {
-  if (!("geolocation" in navigator)) {
-    return appendLog("Geolocation: Not Supported.");
-  }
-  appendLog("Geolocation: Requesting position...");
-  navigator.geolocation.getCurrentPosition(
-    (position: GeolocationPosition) => {
-      appendLog(
-        `Geolocation: Lat: ${position.coords.latitude}, Lon: ${position.coords.longitude}`
-      );
-    },
-    (error: GeolocationPositionError) => {
-      appendLog(`Geolocation error: ${error.message}`);
-    }
-  );
-};
-
 // 6. Push Notifications
 const handlePushSubscription = async () => {
   if (!("Notification" in window) || !("PushManager" in window)) {
@@ -196,29 +198,39 @@ const handlePushSubscription = async () => {
       applicationServerKey: applicationServerKey,
     });
 
+    // 4. Send subscription data to the (simulated) backend
     appendLog("Push Notifications: Successfully subscribed user.");
-    // --- Simulate sending subscription to a backend ---
-    console.log("Simulating sending subscription to backend:", subscription);
-    // In a real app, you would send this 'subscription' object to your server via fetch()
-    /*
-        const response = await fetch('/api/subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(subscription),
-        });
-        if (response.ok) {
-            appendLog('Push Notifications: Successfully subscribed and saved to server.');
-        } else {
-            const errorText = await response.text();
-            appendLog(`Push Notifications: Server failed to save subscription. Status: ${response.status}. Detail: ${errorText.substring(0, 50)}...`);
-        }
-        */
+    // NOTE: In a real app, you would send this 'subscription' object to your server via fetch()
+    console.log(subscription);
+    new Notification("PWA Notification Test", {
+      body: "Permission granted! This is a test notification.",
+      icon: "https://placehold.co/64x64/000000/FFFFFF?text=P",
+    });
   } catch (err) {
     appendLog(
       `Push Notifications: Subscription failed. Error: ${
         (err as Error).message
       }`
     );
+  }
+};
+
+const handleClipboard = async () => {
+  const textToCopy = `PWA Clipboard Test successful at ${new Date().toLocaleTimeString()}`;
+  appendLog(`Attempting to copy text: "${textToCopy}"`);
+  try {
+    await navigator.clipboard.writeText(textToCopy);
+    appendLog("Text copied to clipboard!");
+  } catch (error) {
+    // Fallback for non-secure contexts (like iframes)
+    const input = document.createElement("textarea");
+    input.value = textToCopy;
+    document.body.appendChild(input);
+    input.select();
+    // fallback for "writeText" method
+    document.execCommand("copy");
+    document.body.removeChild(input);
+    appendLog("Text copied using fallback (document.execCommand).", true);
   }
 };
 
@@ -233,13 +245,29 @@ interface FeatureStatus {
 
 const features = computed<FeatureStatus[]>(() => [
   {
+    name: "Geolocation",
+    icon: "📍",
+    action: handleGeolocation,
+    isSupported: "geolocation" in navigator,
+    message: "Accesses your current latitude and longitude.",
+  },
+  {
     name: `Camera (${cameraActive.value ? "ON" : "OFF"})`,
     icon: cameraActive.value ? "🔴" : "📷",
     action: handleCamera,
     isSupported: !!(
       navigator.mediaDevices && navigator.mediaDevices.getUserMedia
     ),
-    message: "Toggle camera access and stream.",
+    message: cameraActive.value
+      ? "Click to stop the live video feed."
+      : "Captures live video from your device camera.",
+  },
+  {
+    name: "Vibration",
+    icon: "📳",
+    action: handleVibrate,
+    isSupported: "vibrate" in navigator,
+    message: "Vibrate the device (mobile only).",
   },
   {
     name: "Web Share",
@@ -247,6 +275,15 @@ const features = computed<FeatureStatus[]>(() => [
     action: handleWebShare,
     isSupported: !!navigator.share,
     message: "Share content with native system dialogue.",
+  },
+
+  {
+    name: "Clipboard Write",
+    action: handleClipboard,
+    isSupported: "clipboard" in navigator && !!navigator.clipboard.writeText,
+    icon: "📋",
+    message: "Copies a simple text string to your device clipboard.",
+    status: "Ready" as const,
   },
   {
     name: "Battery Status",
@@ -261,20 +298,6 @@ const features = computed<FeatureStatus[]>(() => [
     action: handlePushSubscription,
     isSupported: "Notification" in window && "PushManager" in window,
     message: "Request permission and register for push messages.",
-  },
-  {
-    name: "Geolocation",
-    icon: "📍",
-    action: handleGeolocation,
-    isSupported: "geolocation" in navigator,
-    message: "Get your current geographical location.",
-  },
-  {
-    name: "Vibration",
-    icon: "📳",
-    action: handleVibrate,
-    isSupported: "vibrate" in navigator,
-    message: "Vibrate the device (mobile only).",
   },
 ]);
 </script>

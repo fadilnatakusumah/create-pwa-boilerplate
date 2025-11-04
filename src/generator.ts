@@ -30,8 +30,10 @@ const templatePlaceholders: Record<Frontend, { [key: string]: string }> = {
     "// tailwindCSSFunctionViteConfig": `tailwindcss(),`,
   },
   [Frontend.Svelte]: {
-    "// sveltePlaceholder": "",
-    // Add other properties for Svelte here
+    "// tailwindCSSImportsPlaceholder": `@import "tailwindcss";`,
+    "// tailwindCSSPackagePlaceholder": `"@tailwindcss/vite": "^4.1.16",\n    "tailwindcss": "^4.1.16",`,
+    "// tailwindCSSViteConfig": `import tailwindcss from '@tailwindcss/vite'`,
+    "// tailwindCSSFunctionViteConfig": `tailwindcss(),`,
   },
 };
 
@@ -95,6 +97,7 @@ export function generateProject(config: PWAConfig): void {
     "index.html.ejs",
     "public/manifest.json.ejs",
     "src/index.css.ejs",
+    "src/app.css.ejs",
     "src/style.css.ejs",
     "vite.config.ts.ejs",
   ];

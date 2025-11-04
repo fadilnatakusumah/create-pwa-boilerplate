@@ -16,7 +16,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       strategies: 'injectManifest', // We use injectManifest for custom push handlers
       srcDir: 'src',
-      filename: 'sw.js',
+      filename: 'sw.ts',
       
       manifest: {
         name: '<%= pwa.name %>',
