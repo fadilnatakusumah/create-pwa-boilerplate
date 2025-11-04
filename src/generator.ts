@@ -19,13 +19,15 @@ enum Frontend {
 const templatePlaceholders: Record<Frontend, { [key: string]: string }> = {
   [Frontend.React]: {
     "// tailwindCSSImportsPlaceholder": `@import "tailwindcss";`,
-    "// tailwindCSSPackagePlaceholder": `"@tailwindcss/vite": "^4.1.16",\n    "tailwindcss": "^4.1.16,`,
+    "// tailwindCSSPackagePlaceholder": `"@tailwindcss/vite": "^4.1.16",\n    "tailwindcss": "^4.1.16",`,
     "// tailwindCSSViteConfig": `import tailwindcss from '@tailwindcss/vite'`,
     "// tailwindCSSFunctionViteConfig": `tailwindcss(),`,
   },
   [Frontend.Vue]: {
-    "// vuePlaceholder": "",
-    // Add other properties for Vue here
+    "// tailwindCSSImportsPlaceholder": `@import "tailwindcss";`,
+    "// tailwindCSSPackagePlaceholder": `"@tailwindcss/vite": "^4.1.16",\n    "tailwindcss": "^4.1.16",`,
+    "// tailwindCSSViteConfig": `import tailwindcss from '@tailwindcss/vite'`,
+    "// tailwindCSSFunctionViteConfig": `tailwindcss(),`,
   },
   [Frontend.Svelte]: {
     "// sveltePlaceholder": "",
@@ -72,7 +74,6 @@ const processTemplate = (content: string, config: PWAConfig): string => {
   }
 
   // 3. Handle other placeholders
-
   // a) Handle the more complex conditional blocks (like the whole line in vite.config.ts)
   // We will use a unique block placeholder (e.g., '') in the template
 
@@ -94,6 +95,7 @@ export function generateProject(config: PWAConfig): void {
     "index.html.ejs",
     "public/manifest.json.ejs",
     "src/index.css.ejs",
+    "src/style.css.ejs",
     "vite.config.ts.ejs",
   ];
 
@@ -111,11 +113,10 @@ export function generateProject(config: PWAConfig): void {
   });
 
   // 3. Remove unnecessary files if not using Tailwind
-  console.log("🚀 ~ generateProject ~ config.useTailwind:", config.useTailwind);
   if (!config.useTailwind) {
     const filesToRemove = fs
       .readdirSync(path.join(destinationPath, "src/components"))
-      .filter((fileName) => fileName.endsWith(".tailwindcss.tsx"));
+      .filter((fileName) => fileName.includes(".tailwindcss"));
     filesToRemove.forEach((fileName) =>
       fs.removeSync(path.join(destinationPath, "src/components", fileName))
     );
@@ -123,7 +124,7 @@ export function generateProject(config: PWAConfig): void {
     // rename the tailwind files and remove others
     const filesToRemove = fs
       .readdirSync(path.join(destinationPath, "src/components"))
-      .filter((fileName) => !fileName.endsWith(".tailwindcss.tsx"));
+      .filter((fileName) => !fileName.includes(".tailwindcss"));
     filesToRemove.forEach((fileName) =>
       fs.removeSync(path.join(destinationPath, "src/components", fileName))
     );
