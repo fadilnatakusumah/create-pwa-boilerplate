@@ -261,8 +261,8 @@ const PwaFeaturesGrid: React.FC = () => {
       message: "Get your current location.",
     },
     {
-      name: "Camera",
-      icon: "📷",
+      name: `Camera (${cameraActive ? "ON" : "OFF"})`,
+      icon: cameraActive ? "🛑" : "📸",
       action: handleCamera,
       isSupported: !!(
         navigator.mediaDevices && navigator.mediaDevices.getUserMedia
