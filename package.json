@@ -1,7 +1,7 @@
 {
   "name": "create-pwa-boilerplate",
   "displayName": "create-pwa-boilerplate",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "directories": {
     "doc": "docs"
   },
