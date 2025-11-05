@@ -1,7 +1,8 @@
 {
   "name": "create-pwa-boilerplate",
   "displayName": "create-pwa-boilerplate",
-  "version": "1.0.2",
+  "homepage": "https://github.com/fadilnatakusumah/create-pwa-boilerplate",
+  "version": "1.0.3",
   "directories": {
     "doc": "docs"
   },
@@ -24,9 +25,13 @@
   ],
   "type": "module",
   "keywords": [],
-  "author": "Muhammad Fadhilah Mulyana <fadil.ntksmh@gmail.com>",
+  "author": "Muhammad Fadhilah Mulyana <fadil.ntksmh@gmail.com> (http://fadilnatakusumah.com/)",
   "license": "MIT",
   "description": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fadilnatakusumah/create-pwa-boilerplate"
+  },
   "devDependencies": {
     "@types/node": "^24.9.2",
     "copyfiles": "^2.4.1",
